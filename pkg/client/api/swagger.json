@@ -1,0 +1,441 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "identity-api.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "IdentityService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1/identity-api/users/create": {
+      "post": {
+        "operationId": "IdentityService_Create",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/identity_apiUser"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/identity_apiUserRequest"
+            }
+          }
+        ],
+        "tags": [
+          "IdentityService"
+        ]
+      }
+    },
+    "/v1/identity-api/users/getAll": {
+      "get": {
+        "operationId": "IdentityService_GetAll",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/identity_apiListUserResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "ctx.accessToken",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "data.number",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "data.limit",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "IdentityService"
+        ]
+      }
+    },
+    "/v1/identity-api/users/getByEmail": {
+      "post": {
+        "operationId": "IdentityService_GetByEmail",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/identity_apiUser"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/identity_apiStringRequest"
+            }
+          }
+        ],
+        "tags": [
+          "IdentityService"
+        ]
+      }
+    },
+    "/v1/identity-api/users/getByLoginName": {
+      "post": {
+        "operationId": "IdentityService_GetByLoginName",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/identity_apiUser"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/identity_apiStringRequest"
+            }
+          }
+        ],
+        "tags": [
+          "IdentityService"
+        ]
+      }
+    },
+    "/v1/identity-api/users/{value}": {
+      "get": {
+        "operationId": "IdentityService_GetById",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/identity_apiUser"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "value",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "ctx.accessToken",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "IdentityService"
+        ]
+      },
+      "delete": {
+        "operationId": "IdentityService_DeleteById",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/identity_apiStringResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "value",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "ctx.accessToken",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "IdentityService"
+        ]
+      },
+      "put": {
+        "operationId": "IdentityService_UpdatebyId",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/identity_apiStringResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "value",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "ctx": {
+                  "$ref": "#/definitions/identity_apiContext"
+                },
+                "data": {
+                  "$ref": "#/definitions/identity_apiUser"
+                }
+              }
+            }
+          }
+        ],
+        "tags": [
+          "IdentityService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "identity_apiContext": {
+      "type": "object",
+      "properties": {
+        "accessToken": {
+          "type": "string"
+        }
+      }
+    },
+    "identity_apiListUserResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/identity_apiUser"
+          }
+        },
+        "total": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "identity_apiMfa": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "enable": {
+          "type": "boolean"
+        },
+        "secret": {
+          "type": "string"
+        }
+      }
+    },
+    "identity_apiPagination": {
+      "type": "object",
+      "properties": {
+        "number": {
+          "type": "string",
+          "format": "int64"
+        },
+        "limit": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "identity_apiPermission": {
+      "type": "object",
+      "properties": {
+        "privilege": {
+          "type": "string"
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "identity_apiStringRequest": {
+      "type": "object",
+      "properties": {
+        "ctx": {
+          "$ref": "#/definitions/identity_apiContext"
+        },
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "identity_apiStringResponse": {
+      "type": "object"
+    },
+    "identity_apiUser": {
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string"
+        },
+        "fullName": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "username": {
+          "type": "string"
+        },
+        "mfas": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/identity_apiMfa"
+          }
+        },
+        "permissionAll": {
+          "type": "boolean"
+        },
+        "role": {
+          "type": "string"
+        },
+        "permissions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/identity_apiPermission"
+          }
+        },
+        "createTime": {
+          "type": "string",
+          "format": "int64"
+        },
+        "updateTime": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "identity_apiUserRequest": {
+      "type": "object",
+      "properties": {
+        "ctx": {
+          "$ref": "#/definitions/identity_apiContext"
+        },
+        "data": {
+          "$ref": "#/definitions/identity_apiUser"
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    }
+  }
+}

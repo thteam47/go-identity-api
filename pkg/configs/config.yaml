@@ -1,0 +1,9 @@
+grpc_port: ":10000"
+http_port: ":10001"
+mongo_db:
+  url: "mongodb://admin:admin@localhost:27017/"
+  db_name: "identity-api"
+  collection: "user"
+redis_cache:
+  address: "identity-api"
+  url: "localhost:6379"
