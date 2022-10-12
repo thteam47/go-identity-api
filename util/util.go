@@ -2,8 +2,8 @@ package util
 
 import (
 	"encoding/json"
-	"errors"
 
+	"github.com/thteam47/go-identity-api/errutil"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
@@ -14,11 +14,11 @@ func FromMessage(from protoreflect.ProtoMessage, to interface{}) error {
 	}
 	data, err := marshaller.Marshal(from)
 	if err != nil {
-		return errors.New("marshaller.Marshal")
+		return errutil.Wrapf(err, "marshaller.Marshal")
 	}
 	err = json.Unmarshal(data, to)
 	if err != nil {
-		return errors.New("json.Unmarshal")
+		return errutil.Wrapf(err, "json.Unmarshal")
 	}
 	return nil
 }
@@ -26,22 +26,22 @@ func FromMessage(from protoreflect.ProtoMessage, to interface{}) error {
 func ToMessage(from interface{}, to protoreflect.ProtoMessage) error {
 	data, err := json.Marshal(from)
 	if err != nil {
-		return errors.New("marshaller.Marshal")
+		return errutil.Wrapf(err, "json.Marshal")
 	}
 	unmarshaller := protojson.UnmarshalOptions{
 		DiscardUnknown: true,
 	}
 	err = unmarshaller.Unmarshal(data, to)
 	if err != nil {
-		return errors.New("json.Unmarshal")
+		return errutil.Wrapf(err, "unmarshaller.Unmarshal")
 	}
 	return nil
 }
 
 func Keys[K comparable, V any](m map[K]V) []K {
-    keys := make([]K, 0, len(m))
-    for k := range m {
-        keys = append(keys, k)
-    }
-    return keys
+	keys := make([]K, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	return keys
 }

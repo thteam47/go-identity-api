@@ -13,7 +13,7 @@ import (
 )
 
 func Run(lis net.Listener, handler *db.Handler) error {
-	userRepository := repoimpl.NewUserRepo(handler.MongoDB, handler.RedisCache)
+	userRepository := repoimpl.NewUserRepo(handler.MongoDB)
 	authRepository := grpcauth.NewAuthInterceptor(handler.JwtKey)
 	serverOptions := []grpc.ServerOption{}
 	s := grpc.NewServer(serverOptions...)

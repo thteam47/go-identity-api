@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/go-redis/cache/v8"
 	"github.com/golang/glog"
 	"github.com/soheilhy/cmux"
 	clienthttp "github.com/thteam47/go-identity-api/cmd/client"
@@ -36,9 +35,8 @@ func main() {
 	if err != nil {
 		fmt.Println("NewHandlerWithConfig", err)
 		handler = &db.Handler{
-			MongoDB:    &mongo.Collection{},
-			RedisCache: &cache.Cache{},
-			JwtKey:     cf.KeyJwt,
+			MongoDB: &mongo.Collection{},
+			JwtKey:  cf.KeyJwt,
 		}
 	}
 

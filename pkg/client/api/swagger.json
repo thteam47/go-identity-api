@@ -16,6 +16,38 @@
     "application/json"
   ],
   "paths": {
+    "/v1/identity-api/users/approve": {
+      "post": {
+        "operationId": "IdentityService_ApproveUser",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/identity_apiStringResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/identity_apiApproveUserRequest"
+            }
+          }
+        ],
+        "tags": [
+          "IdentityService"
+        ]
+      }
+    },
     "/v1/identity-api/users/create": {
       "post": {
         "operationId": "IdentityService_Create",
@@ -76,15 +108,15 @@
             "name": "data.number",
             "in": "query",
             "required": false,
-            "type": "string",
-            "format": "int64"
+            "type": "integer",
+            "format": "int32"
           },
           {
             "name": "data.limit",
             "in": "query",
             "required": false,
-            "type": "string",
-            "format": "int64"
+            "type": "integer",
+            "format": "int32"
           },
           {
             "name": "search",
@@ -154,6 +186,98 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/identity_apiStringRequest"
+            }
+          }
+        ],
+        "tags": [
+          "IdentityService"
+        ]
+      }
+    },
+    "/v1/identity-api/users/info/{value}": {
+      "put": {
+        "operationId": "IdentityService_UpdateInfoUserbyId",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/identity_apiStringResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "value",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "ctx": {
+                  "$ref": "#/definitions/identity_apiContext"
+                },
+                "data": {
+                  "$ref": "#/definitions/identity_apiUser"
+                }
+              }
+            }
+          }
+        ],
+        "tags": [
+          "IdentityService"
+        ]
+      }
+    },
+    "/v1/identity-api/users/role/{value}": {
+      "put": {
+        "operationId": "IdentityService_UpdateRoleUserbyId",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/identity_apiStringResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "value",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "ctx": {
+                  "$ref": "#/definitions/identity_apiContext"
+                },
+                "data": {
+                  "$ref": "#/definitions/identity_apiUser"
+                }
+              }
             }
           }
         ],
@@ -278,6 +402,20 @@
     }
   },
   "definitions": {
+    "identity_apiApproveUserRequest": {
+      "type": "object",
+      "properties": {
+        "ctx": {
+          "$ref": "#/definitions/identity_apiContext"
+        },
+        "userId": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        }
+      }
+    },
     "identity_apiContext": {
       "type": "object",
       "properties": {
@@ -296,22 +434,8 @@
           }
         },
         "total": {
-          "type": "string",
-          "format": "int64"
-        }
-      }
-    },
-    "identity_apiMfa": {
-      "type": "object",
-      "properties": {
-        "type": {
-          "type": "string"
-        },
-        "enable": {
-          "type": "boolean"
-        },
-        "secret": {
-          "type": "string"
+          "type": "integer",
+          "format": "int32"
         }
       }
     },
@@ -319,12 +443,12 @@
       "type": "object",
       "properties": {
         "number": {
-          "type": "string",
-          "format": "int64"
+          "type": "integer",
+          "format": "int32"
         },
         "limit": {
-          "type": "string",
-          "format": "int64"
+          "type": "integer",
+          "format": "int32"
         }
       }
     },
@@ -371,12 +495,6 @@
         "username": {
           "type": "string"
         },
-        "mfas": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/identity_apiMfa"
-          }
-        },
         "permissionAll": {
           "type": "boolean"
         },
@@ -389,13 +507,16 @@
             "$ref": "#/definitions/identity_apiPermission"
           }
         },
+        "status": {
+          "type": "string"
+        },
         "createTime": {
-          "type": "string",
-          "format": "int64"
+          "type": "integer",
+          "format": "int32"
         },
         "updateTime": {
-          "type": "string",
-          "format": "int64"
+          "type": "integer",
+          "format": "int32"
         }
       }
     },

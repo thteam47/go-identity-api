@@ -21,7 +21,7 @@ func NewAuthInterceptor(jwtKey string) *AuthInterceptor {
 	return &AuthInterceptor{JwtKey: jwtKey}
 }
 
-func (interceptor *AuthInterceptor) Authentication(ctx context.Context, ctxRequest *pb.Context, privilege string, action string) (*models.UserContext, error) {
+func (interceptor *AuthInterceptor) Authentication(ctx context.Context, ctxRequest *pb.Context, privilege string, action string) (UserContext, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		return nil, status.Errorf(codes.Unauthenticated, "metadata is not provided")
@@ -48,14 +48,27 @@ func (interceptor *AuthInterceptor) Authentication(ctx context.Context, ctxReque
 		return nil, status.Errorf(codes.Unauthenticated, "access token is invalid: %v", err)
 	}
 
-	if !claims.PermissionAll {
-		return &claims.UserContext, nil
+	if claims.TokenInfo == nil {
+		return nil, nil
 	}
-	for _, permission := range claims.Permissions {
+	userContext := NewUserContext(claims.TokenInfo)
+	userContext.SetAccessToken(accessToken)
+
+	if privilege == "@any" && action == "@any" {
+		return userContext, nil
+	}
+	if !userContext.GetTokenInfo().AuthenticationDone {
+		return nil, status.Error(codes.PermissionDenied, "Fobbiden!")
+	}
+	if claims.TokenInfo.PermissionAll {
+		return userContext, nil
+	}
+	for _, permission := range claims.TokenInfo.Permissions {
 		if permission.Privilege == privilege {
-			if contains(permission.Actions, action) {
-				return &claims.UserContext, nil
-			}
+			return userContext, nil
+			// if contains(permission.Actions, action) {
+			// 	return userContext, nil
+			// }
 		}
 	}
 	return nil, status.Error(codes.PermissionDenied, "Fobbiden!")

@@ -5,9 +5,6 @@ import (
 )
 
 type Claims struct {
-	UserContext   UserContext  `bson:"user_context,omitempty"`
-	PermissionAll bool         `bson:"permission_all,omitempty"`
-	Role          string       `bson:"role,omitempty"`
-	Permissions   []Permission `bson:"permissions,omitempty"`
+	TokenInfo *TokenInfo `json:"token_info,omitempty" bson:"token_info,omitempty"`
 	jwt.StandardClaims
 }

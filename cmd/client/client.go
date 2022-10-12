@@ -34,7 +34,7 @@ func Run(lis net.Listener, grpc_port string, http_port string) error {
 	mux.HandleFunc("/swagger/", serveSwaggerFile)
 	log.Println("REST server ready...")
 	// s := &http.Server{Handler: allowCORS(mux)}
-	return http.ListenAndServe(http_port, mux)
+	return http.ListenAndServe(http_port, allowCORS(mux))
 	// return s.Serve(lis)
 }
 func serveSwaggerFile(w http.ResponseWriter, r *http.Request) {

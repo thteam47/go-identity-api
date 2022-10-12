@@ -2,6 +2,7 @@ package grpcapp
 
 import (
 	"context"
+	"strings"
 
 	"github.com/thteam47/go-identity-api/errutil"
 	grpcauth "github.com/thteam47/go-identity-api/pkg/grpcutil"
@@ -9,6 +10,8 @@ import (
 	"github.com/thteam47/go-identity-api/pkg/pb"
 	repository "github.com/thteam47/go-identity-api/pkg/repository"
 	"github.com/thteam47/go-identity-api/util"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type IdentityService struct {
@@ -78,6 +81,8 @@ func (inst *IdentityService) Create(ctx context.Context, req *pb.UserRequest) (*
 	if err != nil {
 		return nil, errutil.Wrap(err, "getUser")
 	}
+	user.Email = strings.TrimSpace(strings.ToLower(user.Email))
+	user.Username = strings.TrimSpace(strings.ToLower(user.Username))
 	result, err := inst.userRepository.Create(nil, user)
 	if err != nil {
 		return nil, errutil.Wrap(err, "userRepository.Create")
@@ -144,10 +149,13 @@ func (inst *IdentityService) GetByEmail(ctx context.Context, req *pb.StringReque
 }
 
 func (inst *IdentityService) GetAll(ctx context.Context, req *pb.ListRequest) (*pb.ListUserResponse, error) {
-	// userContext, err := inst.authRepository.Authentication(ctx, req.Ctx, "identity-api:user", "get")
-	// if err != nil {
-	// 	return nil, status.Errorf(codes.PermissionDenied, "authRepository.Authentication")
-	// }
+	userContext, err := inst.authRepository.Authentication(ctx, req.Ctx, "@any", "@any")
+	if err != nil {
+		return nil, status.Errorf(codes.PermissionDenied, "authRepository.Authentication")
+	}
+	if userContext.HasRole() != "admin" {
+		return nil, status.Errorf(codes.PermissionDenied, "Fobbiden!")
+	}
 	number := 1
 	limit := 10
 	if req != nil && req.Data != nil {
@@ -158,7 +166,7 @@ func (inst *IdentityService) GetAll(ctx context.Context, req *pb.ListRequest) (*
 			number = int(req.Data.Number)
 		}
 	}
-	result, err := inst.userRepository.GetAll(nil, int64(number), int64(limit))
+	result, err := inst.userRepository.GetAll(nil, int32(number), int32(limit))
 	if err != nil {
 		return nil, errutil.Wrap(err, "userRepository.GetAll")
 	}
@@ -193,6 +201,45 @@ func (inst *IdentityService) UpdatebyId(ctx context.Context, req *pb.UpdateUserR
 	return &pb.StringResponse{}, nil
 }
 
+func (inst *IdentityService) UpdateInfoUserbyId(ctx context.Context, req *pb.UpdateUserRequest) (*pb.StringResponse, error) {
+	// userContext, err := inst.authRepository.Authentication(ctx, req.Ctx, "identity-api:user", "update")
+	// if err != nil {
+	// 	return nil, status.Errorf(codes.PermissionDenied, "authRepository.Authentication")
+	// }
+	user, err := getUser(req.Data)
+	if err != nil {
+		return nil, errutil.Wrap(err, "getUser")
+	}
+	err = inst.userRepository.UpdateOneByAttr(req.Value, map[string]interface{}{
+		"full_name": user.FullName,
+		"email":     user.Email,
+	})
+	if err != nil {
+		return nil, errutil.Wrap(err, "userRepository.UpdateOneByAttr")
+	}
+	return &pb.StringResponse{}, nil
+}
+
+func (inst *IdentityService) UpdateRoleUserbyId(ctx context.Context, req *pb.UpdateUserRequest) (*pb.StringResponse, error) {
+	// userContext, err := inst.authRepository.Authentication(ctx, req.Ctx, "identity-api:user", "update")
+	// if err != nil {
+	// 	return nil, status.Errorf(codes.PermissionDenied, "authRepository.Authentication")
+	// }
+	user, err := getUser(req.Data)
+	if err != nil {
+		return nil, errutil.Wrap(err, "getUser")
+	}
+	err = inst.userRepository.UpdateOneByAttr(req.Value, map[string]interface{}{
+		"permission_all": user.PermissionAll,
+		"role":           user.Role,
+		"permissions":    user.Permissions,
+	})
+	if err != nil {
+		return nil, errutil.Wrap(err, "userRepository.UpdateOneByAttr")
+	}
+	return &pb.StringResponse{}, nil
+}
+
 func (inst *IdentityService) DeleteById(ctx context.Context, req *pb.StringRequest) (*pb.StringResponse, error) {
 	// userContext, err := inst.authRepository.Authentication(ctx, req.Ctx, "identity-api:user", "delete")
 	// if err != nil {
@@ -201,6 +248,21 @@ func (inst *IdentityService) DeleteById(ctx context.Context, req *pb.StringReque
 	err := inst.userRepository.DeleteById(nil, req.Value)
 	if err != nil {
 		return nil, errutil.Wrap(err, "userRepository.DeleteById")
+	}
+	return &pb.StringResponse{}, nil
+}
+
+func (inst *IdentityService) ApproveUser(ctx context.Context, req *pb.ApproveUserRequest) (*pb.StringResponse, error) {
+	// userContext, err := inst.authRepository.Authentication(ctx, req.Ctx, "identity-api:user", "update")
+	// if err != nil {
+	// 	return nil, status.Errorf(codes.PermissionDenied, "authRepository.Authentication")
+	// }
+
+	err := inst.userRepository.UpdateOneByAttr(req.UserId, map[string]interface{}{
+		"status": req.Status,
+	})
+	if err != nil {
+		return nil, errutil.Wrap(err, "userRepository.UpdatebyId")
 	}
 	return &pb.StringResponse{}, nil
 }

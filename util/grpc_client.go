@@ -9,9 +9,9 @@ import (
 )
 
 type GrpcClientConn struct {
-	config  configs.GrpcClientConnConfig
-	conn    *grpc.ClientConn
-	address string
+	Config  configs.GrpcClientConnConfig
+	Conn    *grpc.ClientConn
+	Address string
 }
 
 var GrpcClientConnTimeout = 20 * time.Second
@@ -26,23 +26,23 @@ func NewGrpcClientConnWithConfig(config configs.GrpcClientConnConfig) (*GrpcClie
 
 func NewGrpcClientConn(config configs.GrpcClientConnConfig) *GrpcClientConn {
 	inst := &GrpcClientConn{
-		config: config,
+		Config: config,
 	}
 
-	inst.address = inst.config.Address
+	inst.Address = inst.Config.Address
 
 	return inst
 }
 
-func (inst *GrpcClientConn) Context(ctx context.Context) context.Context {
-	ctxx, cancel := context.WithTimeout(context.Background(), inst.config.Timeout)
+func (inst *GrpcClientConn) Context() context.Context {
+	ctx, cancel := context.WithTimeout(context.Background(), inst.Config.Timeout)
 	defer cancel()
-	return ctxx
+	return ctx
 }
 
 func (inst *GrpcClientConn) Stop() {
-	if inst.conn != nil {
-		inst.conn.Close()
-		inst.conn = nil
+	if inst.Conn != nil {
+		inst.Conn.Close()
+		inst.Conn = nil
 	}
 }

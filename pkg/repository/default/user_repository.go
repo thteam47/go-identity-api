@@ -5,8 +5,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/go-redis/cache/v8"
 	"github.com/thteam47/go-identity-api/errutil"
+	grpcauth "github.com/thteam47/go-identity-api/pkg/grpcutil"
 	"github.com/thteam47/go-identity-api/pkg/models"
 	"github.com/thteam47/go-identity-api/pkg/repository"
 	"github.com/thteam47/go-identity-api/util"
@@ -17,36 +17,34 @@ import (
 )
 
 type UserRepositoryImpl struct {
-	MongoDB    *mongo.Collection
-	RedisCache *cache.Cache
+	MongoDB *mongo.Collection
 }
 
-func NewUserRepo(mongodb *mongo.Collection, redis *cache.Cache) repository.UserRepository {
+func NewUserRepo(mongodb *mongo.Collection) repository.UserRepository {
 	return &UserRepositoryImpl{
-		MongoDB:    mongodb,
-		RedisCache: redis,
+		MongoDB: mongodb,
 	}
 }
 
-func (inst *UserRepositoryImpl) Create(userContext *models.UserContext, user *models.User) (*models.User, error) {
-	user.CreateTime = time.Now().Unix()
+func (inst *UserRepositoryImpl) Create(userContext grpcauth.UserContext, user *models.User) (*models.User, error) {
+	user.CreateTime = int32(time.Now().Unix())
 	result, err := inst.MongoDB.InsertOne(context.Background(), user)
 	if err != nil {
 		return nil, errutil.Wrap(err, "MongoDB.InsertOne")
 	}
-	uid := result.InsertedID.(primitive.ObjectID)
-	user.ID = uid
+	user.UserId = result.InsertedID.(primitive.ObjectID).Hex()
 	return user, nil
 }
-func (inst *UserRepositoryImpl) GetAll(userContext *models.UserContext, number int64, limit int64) ([]*models.User, error) {
+
+func (inst *UserRepositoryImpl) GetAll(userContext grpcauth.UserContext, number int32, limit int32) ([]*models.User, error) {
 	findOptions := options.Find()
 	findOptions.SetSort(bson.M{"created_at": -1})
 	if number == 1 {
 		findOptions.SetSkip(0)
-		findOptions.SetLimit(limit)
+		findOptions.SetLimit(int64(limit))
 	} else {
-		findOptions.SetSkip((number - 1) * limit)
-		findOptions.SetLimit(limit)
+		findOptions.SetSkip(int64((number - 1) * limit))
+		findOptions.SetLimit(int64(limit))
 	}
 
 	cur, err := inst.MongoDB.Find(context.Background(), bson.M{}, findOptions)
@@ -66,7 +64,7 @@ func (inst *UserRepositoryImpl) GetAll(userContext *models.UserContext, number i
 	return users, nil
 }
 
-func (inst *UserRepositoryImpl) Count(userContext *models.UserContext) (int64, error) {
+func (inst *UserRepositoryImpl) Count(userContext grpcauth.UserContext) (int32, error) {
 	findOptions := options.Find()
 
 	cur, err := inst.MongoDB.Find(context.Background(), bson.M{}, findOptions)
@@ -82,10 +80,10 @@ func (inst *UserRepositoryImpl) Count(userContext *models.UserContext) (int64, e
 		}
 		users = append(users, elem)
 	}
-	return int64(len(users)), nil
+	return int32(len(users)), nil
 }
 
-func (inst *UserRepositoryImpl) GetOneByAttr(userContext *models.UserContext, data map[string]string) (*models.User, error) {
+func (inst *UserRepositoryImpl) GetOneByAttr(userContext grpcauth.UserContext, data map[string]string) (*models.User, error) {
 	if data == nil {
 		return nil, nil
 	}
@@ -94,20 +92,20 @@ func (inst *UserRepositoryImpl) GetOneByAttr(userContext *models.UserContext, da
 		value := ""
 		if item, ok := data[key]; ok {
 			value = item
-		}
-		if key == "_id" {
-			id, err := primitive.ObjectIDFromHex(value)
-			if err != nil {
-				return nil, errutil.Wrap(err, "primitive.ObjectIDFromHex")
+			if key == "_id" {
+				id, err := primitive.ObjectIDFromHex(value)
+				if err != nil {
+					return nil, errutil.Wrap(err, "primitive.ObjectIDFromHex")
+				}
+				findquery = append(findquery, bson.M{
+					key: id,
+				})
+				continue
 			}
 			findquery = append(findquery, bson.M{
-				key: id,
+				key: value,
 			})
-			continue
 		}
-		findquery = append(findquery, bson.M{
-			key: value,
-		})
 	}
 
 	filters := bson.M{
@@ -121,6 +119,26 @@ func (inst *UserRepositoryImpl) GetOneByAttr(userContext *models.UserContext, da
 	}
 	user.UserId = user.ID.Hex()
 	return user, nil
+}
+
+func (inst *UserRepositoryImpl) UpdateOneByAttr(id string, data map[string]interface{}) error {
+	idPri, _ := primitive.ObjectIDFromHex(id)
+
+	filterSurvey := bson.M{"_id": idPri}
+	dataUpdate := bson.M{}
+	for _, key := range util.Keys[string, interface{}](data) {
+		if value, ok := data[key]; ok {
+			dataUpdate[key] = value
+		}
+	}
+	opts := options.Update().SetUpsert(true)
+
+	updateUser := bson.M{"$set": dataUpdate}
+	_, err := inst.MongoDB.UpdateOne(context.Background(), filterSurvey, updateUser, opts)
+	if err != nil {
+		return errutil.Wrapf(err, "MongoDB.UpdateOne")
+	}
+	return nil
 }
 
 // func (inst *UserRepositoryImpl) ChangeActionUser(idUser string, role string, a []string) error {
@@ -153,8 +171,8 @@ func (inst *UserRepositoryImpl) GetOneByAttr(userContext *models.UserContext, da
 
 //		return nil
 //	}
-func (inst *UserRepositoryImpl) UpdatebyId(userContext *models.UserContext, user *models.User, id string) (*models.User, error) {
-	user.UpdateTime = time.Now().Unix()
+func (inst *UserRepositoryImpl) UpdatebyId(userContext grpcauth.UserContext, user *models.User, id string) (*models.User, error) {
+	user.UpdateTime = int32(time.Now().Unix())
 	user_id, _ := primitive.ObjectIDFromHex(id)
 
 	filterUser := bson.M{"_id": user_id}
@@ -198,7 +216,7 @@ func (inst *UserRepositoryImpl) UpdatebyId(userContext *models.UserContext, user
 //
 //		return nil
 //	}
-func (inst *UserRepositoryImpl) DeleteById(userContext *models.UserContext, id string) error {
+func (inst *UserRepositoryImpl) DeleteById(userContext grpcauth.UserContext, id string) error {
 	user_id, _ := primitive.ObjectIDFromHex(id)
 	_, err := inst.MongoDB.DeleteOne(context.Background(), bson.M{"_id": user_id})
 

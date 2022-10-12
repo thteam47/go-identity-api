@@ -16,6 +16,11 @@ type Config struct {
 	RedisCache     Redis                `yaml:"redis_cache"`
 	KeyJwt         string               `yaml:"key_jwt"`
 	GrpcClientConn GrpcClientConnConfig `yaml:"grpc_conn"`
+	Exp            time.Duration        `yaml:"exp"`
+	TotpSecret     string               `yaml:"totp_secret"`
+	TimeoutRedis   time.Duration        `yaml:"time_out_redis"`
+	TimeRequestId  time.Duration        `yaml:"time_request_id"`
+	TimeEmailOtp   time.Duration        `yaml:"time_email_otp"`
 }
 
 type MongoDB struct {
