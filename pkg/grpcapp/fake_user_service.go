@@ -2,6 +2,8 @@ package grpcapp
 
 import (
 	"context"
+	"log"
+	"sync"
 
 	"github.com/icrowley/fake"
 	pb "github.com/thteam47/common/api/identity-api"
@@ -20,24 +22,30 @@ func (inst *IdentityService) FakeUsers(ctx context.Context, req *pb.FakeUserRequ
 	// if !entityutil.ServiceOrAdminRole(userContext) {
 	// 	return nil, status.Errorf(codes.PermissionDenied, http.StatusText(http.StatusForbidden))
 	// }
+	var wg sync.WaitGroup
 	for i := 1; i <= int(req.NumberUser); i++ {
-		user := &entity.User{
-			FullName: fake.FullName(),
-			Email:    fake.EmailAddress(),
-			Username: fake.UserName(),
-			DomainId: req.Ctx.DomainId,
-			Status:   "approved",
-			Position: int32(i),
-		}
-		result, err := inst.componentsContainer.UserRepository().Create(userContext, user)
-		if err != nil {
-			return nil, errutil.Wrap(err, "UserRepository.Create")
-		}
-		err = inst.componentsContainer.IdentityAuthenService().UpdatePassword(userContext, result.UserId, req.Password)
-		if err != nil {
-			return nil, errutil.Wrap(err, "IdentityAuthenService.UpdatePassword")
-		}
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			user := &entity.User{
+				FullName: fake.FullName(),
+				Email:    fake.EmailAddress(),
+				Username: fake.UserName(),
+				DomainId: req.Ctx.DomainId,
+				Status:   "approved",
+				Position: int32(i),
+			}
+			result, err := inst.componentsContainer.UserRepository().Create(userContext, user)
+			if err != nil {
+				log.Println(errutil.Wrap(err, "UserRepository.Create").Error())
+			}
+			err = inst.componentsContainer.IdentityAuthenService().UpdatePassword(userContext, result.UserId, req.Password)
+			if err != nil {
+				log.Println(errutil.Wrap(err, "IdentityAuthenService.UpdatePassword").Error())
+			}
+		}(i)
 	}
 
+	wg.Wait()
 	return &pb.StringResponse{}, nil
 }
